@@ -1,46 +1,48 @@
-# Monitoramento Local APsystems & Relatórios Diários no Telegram
+# APsystems Local Monitoring & Telegram Daily Reports
 
-Este projeto realiza a leitura local (via TCP socket puro na porta 8899) da sua unidade **APsystems ECU** (ECU-R, ECU-R-PRO, ECU-B ou ECU-C) sem depender da nuvem da APsystems nem de estruturas pesadas como o Home Assistant.
+This project performs local polling (via raw TCP socket on port 8899) of your **APsystems ECU** unit (ECU-R, ECU-R-PRO, ECU-B, or ECU-C) without relying on APsystems cloud services or heavy frameworks like Home Assistant.
 
-O sistema roda em segundo plano, monitorando o sistema solar, registrando os picos de geração diários (do sistema, de cada microinversor e de cada painel/módulo fotovoltaico) e enviando um **relatório completo diariamente às 18:00 no Telegram**. Caso ocorra qualquer falha de comunicação com a ECU, um alerta imediato também é enviado ao Telegram.
-
----
-
-## 📋 Funcionalidades
-
-- **Monitoramento em Tempo Real:** Leitura direta da ECU via protocolo local em socket TCP.
-- **Rastreamento de Picos:** Registra a potência máxima atingida no dia pelo sistema, por cada microinversor e por cada módulo fotovoltaico individual.
-- **Relatório Diário no Telegram (18:00):**
-  - Geração de energia do dia (`kWh`)
-  - Geração acumulada total (`kWh`)
-  - Pico de potência do sistema no dia (`W` e o horário em que ocorreu)
-  - Quantidade de microinversores online/offline
-  - Status individual de cada microinversor (Frequência `Hz`, Temperatura `°C`, Sinal, Potência Atual e Pico do Dia)
-  - Status de cada módulo fotovoltaico/canal (Potência Atual `W`, Tensão `V` e Pico do Dia)
-- **Notificação de Falha & Recuperação:** Emite alerta se a ECU ficar inacessível e avisa quando a conexão for reestabelecida.
-- **Zero Dependências Pesadas:** Desenvolvido em Python 3 puro (utiliza apenas bibliotecas nativas da linguagem).
+The system runs in the background, monitoring your solar installation, tracking daily generation peaks (for the whole system, each microinverter, and each PV module), and sending a **comprehensive daily report via Telegram at 18:00**. If communication with the ECU fails, an immediate alert is dispatched to Telegram.
 
 ---
 
-## 🛠️ Arquivos do Projeto
+## 📋 Features
 
-- `main.py`: Ponto de entrada do serviço continuado e tratamento de comandos CLI.
-- `ecu_client.py`: Comunicação TCP com a ECU e decodificação do protocolo binário.
-- `stats_tracker.py`: Gerenciamento e persistência dos picos diários no arquivo `daily_stats.json`.
-- `telegram_notifier.py`: Formatação HTML e envio de mensagens para a API do Telegram Bot.
-- `.env`: Arquivo de configuração das credenciais e parâmetros locais.
-- `.env.example`: Modelo do arquivo de configuração.
-- `apsystems-monitor.service`: Arquivo de unidade para instalação do serviço no Linux (`systemd`).
+* **Real-Time Monitoring:** Direct local reading from the ECU via TCP socket protocol.
+* **Peak Tracking:** Records daily peak power achieved by the system overall, each microinverter, and each individual PV module.
+* **Telegram Daily Report (18:00):**
+* Daily energy generation (`kWh`)
+* Total lifetime energy generation (`kWh`)
+* System daily peak power (`W` and timestamp)
+* Count of online/offline microinverters
+* Detailed status per microinverter (Frequency `Hz`, Temperature `°C`, Signal level, Current Power, and Daily Peak)
+* Detailed status per PV module/channel (Current Power `W`, Voltage `V`, and Daily Peak)
+
+
+* **Failure & Recovery Alerts:** Immediate notifications if the ECU becomes unreachable, with follow-ups upon reconnection.
+* **Zero Heavy Dependencies:** Written in pure Python 3 using standard library packages only.
 
 ---
 
-## ⚙️ Configuração (`.env`)
+## 🛠️ Project Structure
 
-Copie o arquivo de exemplo `.env.example` ou edite diretamente o arquivo `.env`:
+* `main.py`: Entry point for the daemon process and CLI argument parsing.
+* `ecu_client.py`: TCP socket handler and binary protocol decoder for the ECU.
+* `stats_tracker.py`: Tracks and persists daily power peaks to `daily_stats.json`.
+* `telegram_notifier.py`: HTML formatting and HTTP delivery via the Telegram Bot API.
+* `.env`: Environment file for local credentials and operational parameters.
+* `.env.example`: Template for configuration settings.
+* `apsystems-monitor.service`: `systemd` service unit file for Linux installation.
+
+---
+
+## ⚙️ Configuration (`.env`)
+
+Copy `.env.example` to `.env` and fill in your details:
 
 ```env
 # ==========================================
-# Configurações da ECU APsystems
+# APsystems ECU Settings
 # ==========================================
 ECU_IP=192.168.xx.xx
 ECU_PORT=8899
@@ -49,108 +51,131 @@ POLL_INTERVAL_SECONDS=120
 REPORT_TIME=18:00
 
 # ==========================================
-# Configurações do Bot do Telegram
+# Telegram Bot Settings
 # ==========================================
 TELEGRAM_BOT_TOKEN=123456789:ABCdefGhIJKlmNoPQRstuVWXyz
 TELEGRAM_CHAT_ID=12345678
 TELEGRAM_ALERT_ON_FAILURE=true
 ALERT_COOLDOWN_MINUTES=60
+
 ```
 
-### Como obter o Token e Chat ID do Telegram:
-1. **Bot Token:** Abra o Telegram e converse com o [@BotFather](https://t.me/BotFather). Envie `/newbot`, escolha um nome e usuário e copie o token gerado.
-2. **Chat ID:** Abra seu bot recém-criado, clique em `Start` e envie uma mensagem. Em seguida, busque pelo seu Chat ID usando o [@userinfobot](https://t.me/userinfobot) ou [@raw_data_bot](https://t.me/raw_data_bot).
+### Obtaining your Telegram Token & Chat ID:
+
+1. **Bot Token:** Message [@BotFather](https://t.me/BotFather) on Telegram. Run `/newbot`, set a name and username, and copy the issued token.
+2. **Chat ID:** Open a chat with your newly created bot, press `Start`, and send a message. Then query [@userinfobot](https://t.me/userinfobot) or [@raw_data_bot](https://t.me/raw_data_bot) to retrieve your numeric Chat ID.
 
 ---
 
-## 🧪 Como Testar Manualmente
+## 🧪 Manual Testing
 
-Você pode executar testes específicos pelo terminal usando as flags do `main.py`:
+You can run standalone diagnostics using CLI flags in `main.py`:
 
-1. **Testar comunicação com a ECU local:**
-   ```bash
-   python3 main.py --test-ecu
-   ```
+1. **Test communication with local ECU:**
+```bash
+python3 main.py --test-ecu
 
-2. **Testar envio de mensagem para o Telegram:**
-   ```bash
-   python3 main.py --test-telegram
-   ```
+```
 
-3. **Gerar e enviar o Relatório Diário imediatamente (sem esperar as 18:00):**
-   ```bash
-   python3 main.py --test-report
-   ```
 
----
+2. **Test Telegram bot integration:**
+```bash
+python3 main.py --test-telegram
 
-## 📦 Instalação como Serviço no Linux (`systemd`)
+```
 
-Para garantir que o monitoramento seja executado em segundo plano e inicie automaticamente na inicialização do sistema, instale o serviço no `systemd`:
 
-1. **Copie o arquivo de serviço para o diretório do systemd:**
-   ```bash
-   sudo cp apsystems-monitor.service /etc/systemd/system/
-   ```
+3. **Generate and send Daily Report immediately (bypassing 18:00 schedule):**
+```bash
+python3 main.py --test-report
 
-2. **Recarregue as configurações do systemd:**
-   ```bash
-   sudo systemctl daemon-reload
-   ```
+```
 
-3. **Habilite o serviço para iniciar com o sistema:**
-   ```bash
-   sudo systemctl enable apsystems-monitor.service
-   ```
 
-4. **Inicie o serviço imediatamente:**
-   ```bash
-   sudo systemctl start apsystems-monitor.service
-   ```
-
-5. **Verifique o status do serviço:**
-   ```bash
-   sudo systemctl status apsystems-monitor.service
-   ```
-
-6. **Para visualizar os logs em tempo real:**
-   ```bash
-   journalctl -u apsystems-monitor.service -f
-   ```
 
 ---
 
-## 📝 Exemplo de Relatório Recebido no Telegram
+## 📦 Service Installation (`systemd` on Linux)
+
+To run the script persistently in the background and start automatically on boot:
+
+1. **Copy unit file to systemd directory:**
+```bash
+sudo cp apsystems-monitor.service /etc/systemd/system/
+
+```
+
+
+2. **Reload systemd manager configuration:**
+```bash
+sudo systemctl daemon-reload
+
+```
+
+
+3. **Enable service to launch on boot:**
+```bash
+sudo systemctl enable apsystems-monitor.service
+
+```
+
+
+4. **Start service immediately:**
+```bash
+sudo systemctl start apsystems-monitor.service
+
+```
+
+
+5. **Verify service status:**
+```bash
+sudo systemctl status apsystems-monitor.service
+
+```
+
+
+6. **View live operational logs:**
+```bash
+journalctl -u apsystems-monitor.service -f
+
+```
+
+
+
+---
+
+## 📝 Sample Telegram Daily Report
 
 ```html
-☀️ RELATÓRIO DIÁRIO DE GERAÇÃO SOLAR
-📅 Data: 12/08/2026 às 18:00
+☀️ DAILY SOLAR GENERATION REPORT
+📅 Date: 08/12/2026 at 18:00
 📍 ECU ID: xxxxxxxx
 
-📊 RESUMO GERAL DE GERAÇÃO:
-• ⚡ Geração Hoje: 34,13 kWh
-• 📈 Total Acumulado: 3.921,76 kWh
-• 🔥 Pico do Sistema: 3.250 W (às 12:42:10)
-• 🔌 Status Inversores: 5 / 8 Online
+📊 OVERALL GENERATION SUMMARY:
+• ⚡ Generation Today: 34.13 kWh
+• 📈 Lifetime Total: 3,921.76 kWh
+• 🔥 System Peak: 3,250 W (at 12:42:10)
+• 🔌 Inverter Status: 5 / 8 Online
 
-🛠️ STATUS DOS MICROINVERSORES E MÓDULOS:
+🛠️ MICROINVERTER & MODULE DETAILS:
 
-🟢 Microinversor xxxxxxxx
-  • Sinal: 1/5 | Freq: 60.0 Hz | Temp: 36°C
-  • Potência Atual: 35 W | Pico Hoje: 540 W (12:40:15)
-  • Módulos Fotovoltaicos (Canais):
-    ▫️ Módulo 1: 18 W @ 206 V | Pico: 275 W
-    ▫️ Módulo 2: 17 W @ 206 V | Pico: 265 W
+🟢 Microinverter xxxxxxxx
+  • Signal: 1/5 | Freq: 60.0 Hz | Temp: 36°C
+  • Power Output: 35 W | Today's Peak: 540 W (12:40:15)
+  • PV Modules (Channels):
+    ▫️ Module 1: 18 W @ 206 V | Peak: 275 W
+    ▫️ Module 2: 17 W @ 206 V | Peak: 265 W
 
-🟢 Microinversor xxxxxxxxx
-  • Sinal: 3/5 | Freq: 60.1 Hz | Temp: 36°C
-  • Potência Atual: 50 W | Pico Hoje: 1180 W (12:42:10)
-  • Módulos Fotovoltaicos (Canais):
-    ▫️ Módulo 1: 13 W @ 204 V | Pico: 295 W
-    ▫️ Módulo 2: 12 W @ 204 V | Pico: 295 W
-    ▫️ Módulo 3: 12 W @ 204 V | Pico: 295 W
-    ▫️ Módulo 4: 13 W @ 204 V | Pico: 295 W
+🟢 Microinverter xxxxxxxxx
+  • Signal: 3/5 | Freq: 60.1 Hz | Temp: 36°C
+  • Power Output: 50 W | Today's Peak: 1180 W (12:42:10)
+  • PV Modules (Channels):
+    ▫️ Module 1: 13 W @ 204 V | Peak: 295 W
+    ▫️ Module 2: 12 W @ 204 V | Peak: 295 W
+    ▫️ Module 3: 12 W @ 204 V | Peak: 295 W
+    ▫️ Module 4: 13 W @ 204 V | Peak: 295 W
 
-🔴 Microinversor xxxxxxxxx
-  • Status: ⚠️ Offline / Sem sinal de comunicação com a ECU
+🔴 Microinverter xxxxxxxxx
+  • Status: ⚠️ Offline / No communication signal with ECU
+
 ```
