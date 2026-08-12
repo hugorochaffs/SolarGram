@@ -144,7 +144,7 @@ journalctl -u apsystems-monitor.service -f
 
 ---
 
-## 📝 Sample Telegram Daily Report
+## 📝 Sample Telegram Daily Report (translated to EN)
 
 ```html
 ☀️ DAILY SOLAR GENERATION REPORT
