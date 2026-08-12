@@ -1,0 +1,29 @@
+# Arquivos de ambiente e segredos (NUNCA comitar no Git)
+.env
+*.env
+
+# Dados locais e cache de estado do monitor
+daily_stats.json
+*.log
+
+# Cache do Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Ambientes virtuais Python
+.venv/
+venv/
+ENV/
+env/
+
+# Configurações de IDEs e Editores
+.vscode/
+.idea/
+*.swp
+*~
+
+# Sistema Operacional
+.DS_Store
+Thumbs.db

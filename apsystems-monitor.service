@@ -1,0 +1,16 @@
+[Unit]
+Description=APsystems Local ECU Solar Monitor & Telegram Notifier
+After=network.target network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=hugo
+WorkingDirectory=/home/hugo/gitlab/monitorApsystemsLocal
+ExecStart=/usr/bin/python3 /home/hugo/gitlab/monitorApsystemsLocal/main.py
+Restart=always
+RestartSec=10
+Environment=PYTHONUNBUFFERED=1
+
+[Install]
+WantedBy=multi-user.target
